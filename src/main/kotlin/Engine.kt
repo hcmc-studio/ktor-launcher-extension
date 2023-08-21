@@ -21,14 +21,16 @@ import studio.hcmc.ktor.plugin.*
 import studio.hcmc.ktor.routing.respondError
 
 object Engine {
-    class Builder(
+    class Builder private constructor(
         var port: Int,
+        var nettyApplicationEngineConfiguration: NettyApplicationEngine.Configuration.() -> Unit = {},
         var jsonContentNegotiationConfiguration: JsonContentNegotiationConfiguration.() -> Unit = {},
         var doubleReceiveConfiguration: DoubleReceiveConfig.() -> Unit = {},
         var requestLoggingConfiguration: RequestLoggingConfiguration.() -> Unit = {},
         var responseLoggingConfiguration: ResponseLoggingConfiguration.() -> Unit = {},
         var statusPagesConfiguration: StatusPagesConfig.() -> Unit = {},
-        var routingConfiguration: Routing.() -> Unit = {}
+        var routingConfiguration: Routing.() -> Unit = {},
+        var moduleConfiguration: Application.() -> Unit = {}
     ) {
         companion object {
             operator fun invoke(port: Int, configure: Builder.() -> Unit): NettyApplicationEngine {
@@ -43,12 +45,15 @@ object Engine {
                 factory = Netty,
                 port = port,
                 host = "0.0.0.0",
-                configure = {
-                    requestQueueLimit = Int.MAX_VALUE
-                    responseWriteTimeoutSeconds = Int.MAX_VALUE
-                },
+                configure = { configure() },
                 module = { module() }
             )
+        }
+
+        private fun NettyApplicationEngine.Configuration.configure() {
+            requestQueueLimit = Int.MAX_VALUE
+            responseWriteTimeoutSeconds = Int.MAX_VALUE
+            nettyApplicationEngineConfiguration()
         }
 
         private fun Application.module() {
@@ -89,6 +94,8 @@ object Engine {
             }
 
             routing(routingConfiguration)
+
+            moduleConfiguration()
         }
     }
 }

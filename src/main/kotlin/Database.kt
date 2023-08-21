@@ -11,7 +11,7 @@ import studio.hcmc.exposed.transaction.suspendedTransaction
 import java.util.*
 
 object Database {
-    class Builder(
+    class Builder private constructor(
         var url: String,
         var name: String,
         var propertiesName: String = "database.properties",
@@ -22,7 +22,11 @@ object Database {
         var transactionConfiguration: TransactionCoroutineDispatcher.Builder.() -> Unit = {}
     ) {
         companion object {
-            suspend operator fun invoke(url: String, name: String, configure: Builder.() -> Unit): Database {
+            suspend operator fun invoke(
+                url: String,
+                name: String,
+                configure: Builder.() -> Unit
+            ): Database {
                 return Builder(url, name)
                     .apply(configure)
                     .build()
