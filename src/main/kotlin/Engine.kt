@@ -1,21 +1,12 @@
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.application.*
-import io.ktor.server.application.*
-import io.ktor.server.application.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.autohead.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.doublereceive.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
+import io.ktor.server.resources.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.Routing
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonBuilder
 import studio.hcmc.kotlin.protocol.io.ErrorDataTransferObject
 import studio.hcmc.ktor.plugin.*
 import studio.hcmc.ktor.routing.respondError
@@ -25,6 +16,7 @@ object Engine {
         var port: Int,
         var nettyApplicationEngineConfiguration: NettyApplicationEngine.Configuration.() -> Unit = {},
         var jsonContentNegotiationConfiguration: JsonContentNegotiationConfiguration.() -> Unit = {},
+        var resourcesConfiguration: io.ktor.resources.Resources.Configuration.() -> Unit = {},
         var doubleReceiveConfiguration: DoubleReceiveConfig.() -> Unit = {},
         var requestLoggingConfiguration: RequestLoggingConfiguration.() -> Unit = {},
         var responseLoggingConfiguration: ResponseLoggingConfiguration.() -> Unit = {},
@@ -59,6 +51,10 @@ object Engine {
         private fun Application.module() {
             install(JsonContentNegotiation) {
                 jsonContentNegotiationConfiguration()
+            }
+
+            install(Resources) {
+                resourcesConfiguration()
             }
 
             install(AcceptedAt) {
