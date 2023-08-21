@@ -47,16 +47,14 @@ publishing {
 }
 
 dependencies {
-    implementation(fileTree(mapOf(
-        "dir" to "/Users/ji-hwankim/Workspace/HCMC/ktor-plugin-content-negotiation/build/libs",
-        "include" to "ktor-plugin-content-negotiation-0.0.39.jar"
-    )))
-
     implementation("com.github.hcmc-studio:exposed-table-extension:$hcmc_extension_version")
     implementation("com.github.hcmc-studio:exposed-transaction-extension:$hcmc_extension_version")
+    implementation("com.github.hcmc-studio:kotlin-protocol-extension:$hcmc_extension_version")
     implementation("com.github.hcmc-studio:ktor-plugin-accepted-at:$hcmc_extension_version")
+    implementation("com.github.hcmc-studio:ktor-plugin-content-negotiation:$hcmc_extension_version")
     implementation("com.github.hcmc-studio:ktor-plugin-request-logging:$hcmc_extension_version")
     implementation("com.github.hcmc-studio:ktor-plugin-response-logging:$hcmc_extension_version")
+    implementation("com.github.hcmc-studio:ktor-routing-extension:$hcmc_extension_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime-jvm:$kotlinx_datetime_version")
@@ -74,5 +72,4 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
 
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
 }

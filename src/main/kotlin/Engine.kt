@@ -1,4 +1,8 @@
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.application.*
+import io.ktor.server.application.*
 import io.ktor.server.application.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -6,40 +10,28 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.autohead.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.doublereceive.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonBuilder
-import studio.hcmc.ktor.plugin.AcceptedAt
-import studio.hcmc.ktor.plugin.RequestLogging
+import studio.hcmc.kotlin.protocol.io.ErrorDataTransferObject
+import studio.hcmc.ktor.plugin.*
+import studio.hcmc.ktor.routing.respondError
 
 object Engine {
-    fun start(
-        port: UShort,
-        json: Json = Json
-    ): NettyApplicationEngine {
-        val engine = embeddedServer(
-            factory = Netty,
-            port = port.toInt(),
-            host = "0.0.0.0",
-            configure = {
-                requestQueueLimit = Int.MAX_VALUE
-                responseWriteTimeoutSeconds = Int.MAX_VALUE
-            },
-            module = {
-                configureSerialization(json)
-            }
-        )
-
-        return engine
-    }
-
     class Builder(
-        var port: UShort,
-        var jsonBuilder: JsonBuilder.() -> Unit = {},
-        var contentNegotiationConfiguration: ContentNegotiationConfig.() -> Unit = {},
-        var doubleReceiveConfiguration: DoubleReceiveConfig.() -> Unit = {}
-        ) {
+        var port: Int,
+        var jsonContentNegotiationConfiguration: JsonContentNegotiationConfiguration.() -> Unit = {},
+        var doubleReceiveConfiguration: DoubleReceiveConfig.() -> Unit = {},
+        var requestLoggingConfiguration: RequestLoggingConfiguration.() -> Unit = {},
+        var responseLoggingConfiguration: ResponseLoggingConfiguration.() -> Unit = {},
+        var statusPagesConfiguration: StatusPagesConfig.() -> Unit = {},
+        var routingConfiguration: Routing.() -> Unit = {}
+    ) {
         companion object {
-            operator fun invoke(port: UShort, configure: Builder.() -> Unit): NettyApplicationEngine {
+            operator fun invoke(port: Int, configure: Builder.() -> Unit): NettyApplicationEngine {
                 return Builder(port)
                     .apply(configure)
                     .build()
@@ -49,7 +41,7 @@ object Engine {
         private fun build(): NettyApplicationEngine {
             return embeddedServer(
                 factory = Netty,
-                port = port.toInt(),
+                port = port,
                 host = "0.0.0.0",
                 configure = {
                     requestQueueLimit = Int.MAX_VALUE
@@ -60,15 +52,8 @@ object Engine {
         }
 
         private fun Application.module() {
-            val json = Json {
-                jsonBuilder()
-            }
-
-            attributes.put(serializerKey, json)
-
-            install(ContentNegotiation) {
-                json(json)
-                contentNegotiationConfiguration()
+            install(JsonContentNegotiation) {
+                jsonContentNegotiationConfiguration()
             }
 
             install(AcceptedAt) {
@@ -84,8 +69,26 @@ object Engine {
             }
 
             install(RequestLogging) {
-
+                requestLoggingConfiguration()
             }
+
+            install(ResponseLogging) {
+                responseLoggingConfiguration()
+            }
+
+            install(StatusPages) {
+                statusPagesConfiguration()
+
+                exception<ErrorDataTransferObject> { call, throwable ->
+                    call.respondError(HttpStatusCode.fromValue(throwable.httpStatusCode), throwable)
+                }
+
+                exception<Throwable> { call, throwable ->
+                    call.respondError(HttpStatusCode.InternalServerError, throwable)
+                }
+            }
+
+            routing(routingConfiguration)
         }
     }
 }
