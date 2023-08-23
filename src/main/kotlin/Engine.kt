@@ -10,6 +10,7 @@ import io.ktor.server.routing.*
 import studio.hcmc.kotlin.protocol.io.ErrorDataTransferObject
 import studio.hcmc.ktor.plugin.*
 import studio.hcmc.ktor.routing.respondError
+import studio.hcmc.ktor.routing.respondObject
 
 object Engine {
     class Builder private constructor(
@@ -81,7 +82,7 @@ object Engine {
                 statusPagesConfiguration()
 
                 exception<ErrorDataTransferObject> { call, throwable ->
-                    call.respondError(HttpStatusCode.fromValue(throwable.httpStatusCode), throwable)
+                    call.respondObject(HttpStatusCode.fromValue(throwable.httpStatusCode), throwable)
                 }
 
                 exception<Throwable> { call, throwable ->
