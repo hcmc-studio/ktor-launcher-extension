@@ -80,12 +80,13 @@ object Engine {
 
             install(StatusPages) {
                 statusPagesConfiguration()
-
                 exception<ErrorDataTransferObject> { call, throwable ->
+                    logError(call, throwable)
                     call.respondObject(HttpStatusCode.fromValue(throwable.httpStatusCode), throwable)
                 }
 
                 exception<Throwable> { call, throwable ->
+                    logError(call, throwable)
                     call.respondError(HttpStatusCode.InternalServerError, throwable)
                 }
             }
