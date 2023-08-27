@@ -13,6 +13,14 @@ import studio.hcmc.ktor.routing.respondError
 import studio.hcmc.ktor.routing.respondObject
 
 object Engine {
+    private lateinit var _engine: NettyApplicationEngine
+    private lateinit var _application: Application
+    private lateinit var _routing: Routing
+
+    val engine: NettyApplicationEngine get() = _engine
+    val application: Application get() = _application
+    val routing: Routing get() = _routing
+
     class Builder private constructor(
         var port: Int,
         var nettyApplicationEngineConfiguration: NettyApplicationEngine.Configuration.() -> Unit = {},
@@ -34,13 +42,18 @@ object Engine {
         }
 
         private fun build(): NettyApplicationEngine {
-            return embeddedServer(
+            val engine = embeddedServer(
                 factory = Netty,
                 port = port,
                 host = "0.0.0.0",
                 configure = { configure() },
                 module = { module() }
             )
+
+            _engine = engine
+            _application = engine.application
+
+            return engine
         }
 
         private fun NettyApplicationEngine.Configuration.configure() {
@@ -91,7 +104,7 @@ object Engine {
                 }
             }
 
-            routing(routingConfiguration)
+            _routing = routing(routingConfiguration)
 
             moduleConfiguration()
         }
